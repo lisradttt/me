@@ -21,8 +21,8 @@ async def arbic(client: Client, query: CallbackQuery):
                         url=f"https://t.me/{bot.username}?startgroup=true",
                     )
                 ],
-                [InlineKeyboardButton("• MiMO 🤙🏻", url=f"https://t.me/ISIIQ")],
-                [InlineKeyboardButton("✧ 𝚁𝚄𝚂𝚂𝙸𝙰𝙽 ✧", url=f"https://t.me/e2zzz")],
+                [InlineKeyboardButton("المطور كيرو", url=f"https://t.me/AT_W2")],
+                [InlineKeyboardButton("المبرمج مشاكس", url=f"https://t.me/AT_W3")],
                 [
                     InlineKeyboardButton("طريقة التشغيل .", callback_data="bcmds"),
                     InlineKeyboardButton("طريقة التفعيل.", callback_data="bhowtouse"),

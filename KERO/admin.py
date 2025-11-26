@@ -1,21 +1,56 @@
 import asyncio
-from config import OWNER, OWNER_NAME, VIDEO
-from pyrogram import Client, filters
-from KERO.info import (remove_active, is_served_call, joinch)
-from KERO.Data import (get_call, get_dev, get_group, get_channel)
-from KERO.info import (add, db, download, gen_thumb)
-from pytgcalls import PyTgCalls, StreamType
-from pyrogram.enums import ChatType, ChatMemberStatus
-from pytgcalls.types.input_stream import AudioPiped, AudioVideoPiped
-from pytgcalls.types.input_stream.quality import (HighQualityAudio,
-                                                  HighQualityVideo,
-                                                  LowQualityAudio,
-                                                  LowQualityVideo,
-                                                  MediumQualityAudio,
-                                                  MediumQualityVideo)
+import os
 
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from pyrogram.types import CallbackQuery
+from config import OWNER, OWNER_NAME, VIDEO, PHOTO
+
+# ───────────────────────────────
+# Pyrogram
+# ───────────────────────────────
+from pyrogram import Client, filters
+from pyrogram.enums import ChatType, ChatMemberStatus
+from pyrogram.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    CallbackQuery
+)
+
+# ───────────────────────────────
+# PyTgCalls (Voice Chat)
+# ───────────────────────────────
+from pytgcalls import PyTgCalls
+from pytgcalls.types.input_stream import (
+    AudioPiped,
+    AudioVideoPiped
+)
+from pytgcalls.types.input_stream.quality import (
+    HighQualityAudio,
+    HighQualityVideo,
+    MediumQualityAudio,
+    MediumQualityVideo,
+    LowQualityAudio,
+    LowQualityVideo
+)
+
+# ───────────────────────────────
+# الملفات الداخلية KERO
+# ───────────────────────────────
+from KERO.info import (
+    remove_active,
+    is_served_call,
+    joinch,
+    add,
+    db,
+    download,
+    gen_thumb
+)
+
+from KERO.Data import (
+    get_call,
+    get_dev,
+    get_group,
+    get_channel
+)
+
 
 @Client.on_callback_query(
     filters.regex(pattern=r"^(pause|skip|stop|resume)$")
@@ -154,7 +189,7 @@ async def admin_risght(client: Client, message):
          if userx.photo:
             photo_id = userx.photo.big_file_id
          else:
-            ahmed = await client.get_chat("ISIIQ")
+            ahmed = await client.get_chat("AT_W2")
             photo_id = ahmed.photo.big_file_id
          photo = await client.download_media(photo_id)
          img = await gen_thumb(videoid, photo)
@@ -163,7 +198,7 @@ async def admin_risght(client: Client, message):
        requester = userx.mention       
        gr = await get_group(bot_username)
        ch = await get_channel(bot_username)
-       button = [[InlineKeyboardButton(text="END", callback_data=f"stop"), InlineKeyboardButton(text="RESUME", callback_data=f"resume"), InlineKeyboardButton(text="PAUSE", callback_data=f"pause")], [InlineKeyboardButton(text="{• Channel 🐈‍⬛.}", url=f"{ch}"), InlineKeyboardButton(text="{ • Group 🐈‍⬛.  }", url=f"{gr}")], [InlineKeyboardButton(text=f"{OWNER_NAME}", url="https://t.me/ISIIQ")], [InlineKeyboardButton(text=" أضفني لـ جروبك 🐾.", url=f"https://t.me/{bot_username}?startgroup=True")]]
+       button = [[InlineKeyboardButton(text="END", callback_data=f"stop"), InlineKeyboardButton(text="RESUME", callback_data=f"resume"), InlineKeyboardButton(text="PAUSE", callback_data=f"pause")], [InlineKeyboardButton(text="{قـناه الســورس}", url=f"{ch}"), InlineKeyboardButton(text="{جــروب الـدعم}", url=f"{gr}")], [InlineKeyboardButton(text=f"{OWNER_NAME}", url="https://t.me/M_9_T")], [InlineKeyboardButton(text="اضف البوت الي مجموعتك او قناتك ⚡", url=f"https://t.me/{bot_username}?startgroup=True")]]
        await message.reply_photo(photo=img, caption=f"**Skipped Streaming **\n\n**Song Name** : {title}\n**Duration Time** {dur}\n**Request By** : {requester}", reply_markup=InlineKeyboardMarkup(button))
        try:
            os.remove(file_path)

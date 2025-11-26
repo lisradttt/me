@@ -39,6 +39,8 @@ gen_button = [
     ]
 ]
 
+#كوارث 
+msg = None
 
 
 
@@ -49,9 +51,9 @@ async def main(_, msg):
 
 async def generate_session(bot: Client, msg: Message, telethon=False, is_bot: bool = False):
     if telethon:
-        ty = "Telethon"
+        ty = "ᴛᴇʟᴇᴛʜᴏɴ"
     else:
-        ty = "Pyrogram"
+        ty = "ᴩʏʀᴏɢʀᴀᴍ"
     if is_bot:
         ty += " ʙᴏᴛ"
     await msg.reply(f"**♪ انت الان سوف تستخرج جلسه بيروجرام اصدار 2.0.59  🚦⚡ .**")

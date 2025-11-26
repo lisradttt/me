@@ -1,6 +1,6 @@
 from pyrogram import filters, Client
 from pyrogram import Client as app
-from config import API_ID, API_HASH, MONGO_DB_URL, appp, user as usr, helper as ass, call, OWNER, OWNER_NAME, CHANNEL, GROUP, VIDEO
+from config import API_ID, API_HASH, MONGO_DB_URL, appp, user as usr, helper as ass, call, OWNER, OWNER_NAME, CHANNEL, GROUP, VIDEO,bot_username
 from KERO.info import Call, activecall, helper, active
 from KERO.Data import db, dev, devname, set_must, get_data
 from pyrogram.raw.types import InputPeerChannel
@@ -13,6 +13,8 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyb
 from pyrogram.enums import ChatType
 import asyncio, os, sys
 from os import system, execle, environ
+#كوارث 
+msg = None
 
 
 mongodb = _mongo_client_(MONGO_DB_URL)
@@ -72,15 +74,15 @@ async def auto_bot():
         except:
            pass
         try:
-          await user.join_chat("E_BBN")
+          await user.join_chat("vzo_a")
         except:
           pass
         try:
-          await user.join_chat("b2222e")
+          await user.join_chat("noordot")
         except:
           pass
         try:
-          await user.join_chat("JoyBoyIQ")
+          await user.join_chat("cr_nox")
         except:
           pass
       except Exception as e:
@@ -213,15 +215,15 @@ async def stratmaked(client, message):
     kep = ReplyKeyboardMarkup([
 ["حذف بوت", "صنع بوت"],
 ["حول السورس", "استخراج جلسه"]],resize_keyboard=True)
-    await message.reply_text(f"**👋🏻 ꒐ أهلاً بك {message.from_user.mention}  🚦⚡ .\n 🐈‍⬛ | في صانع البوتات**", reply_markup=kep,quote=True)
+    await message.reply_text(f"**👋🏻 ꒐ أهلاً بك {message.from_user.mention}  🚦⚡ .\n🤖 ꒐ في صانع ميوزك نـور الـحاكم  🚦⚡ .**", reply_markup=kep,quote=True)
     
 @app.on_message(
     filters.command(["/alive", "معلومات", "سورس", "السورس", "• السورس •"], "")
 )
 async def alive(client: Client, message):
     chat_id = message.chat.id
-    ch = await get_channelsr(client.me.username)
-    gr = await get_groupsr(client.me.username)
+    ch = await CHANNEL(client.me.username)
+    gr = await GROUP(client.me.username)
     keyboard = InlineKeyboardMarkup(
         [
             [
@@ -232,16 +234,16 @@ async def alive(client: Client, message):
                  InlineKeyboardButton(f"{OWNER_NAME}", url=f"https://t.me/{OWNER[0]}")
             ],
             [ 
-                 InlineKeyboardButton(text=" أضفني لـ جروبك 🐈‍⬛.", url=f"https://t.me/{bot_username}?startgroup=True")
+                 InlineKeyboardButton(text="اضف البوت الي مجموعتك او قناتك ❤", url=f"https://t.me/{bot_username}?startgroup=True")
             ]
         ]
     )
 
     alive = f"""╭──── • ◈ • ────╮
-么      Owner : @ISIIQ 🚦⚡ .
-么      Owner : @e2zzz 🚦⚡ .
+么 [𝙾𝚆𝙽𝙴𝚁](t.me/ISIIQ) 🚦⚡ .
+么  [𝙾𝚆𝙽𝙴𝚁](t.me/e2zzz) 🚦⚡ .
 ╰──── • ◈ • ────╯
-🚦⚡ 𝚃𝙷𝙴 𝙱𝙴𝚂𝚃 𝚂𝙾𝚄𝚁𝙲𝙴 𝙾?? 𝚃𝙴𝙻𝙴??𝚁𝙰𝙼  🚦⚡ ."""
+🚦⚡ 𝚃𝙷𝙴 𝙱𝙴𝚂𝚃 𝚂𝙾𝚄𝚁𝙲𝙴 𝙾?? 𝚃𝙴𝙻𝙴𝙶𝚁𝙰𝙼  🚦⚡ ."""
 
     await message.reply_video(
         video=VIDEO,
@@ -275,16 +277,8 @@ async def cloner(app: app, message):
       if not message.chat.username in OWNER:
          return await message.reply_text(f"**♪ الوضع المجاني معطل الان  🚦⚡ .\n♪ راسل المطور لتنصيب مدفوع  🚦⚡ .\n♪ Dev : @{OWNER[0]}  🚦⚡ .**")
     user_id = message.chat.id
-    try:
-        tokenn = await app.ask(
-            chat_id=user_id,
-            text="**♪ ارسل الان توكن البوت  🚦⚡ .**",
-            timeout=999999
-        )
-        token = tokenn.text
-    except asyncio.TimeoutError:
-        await app.send_message(user_id, "**• لقد أنتهي الوقت الرجاء البدء من جديد 🐈‍⬛.**")
-        return
+    tokenn = await app.ask(chat_id=user_id, text="**♪ ارسل الان توكن البوت  🚦⚡ .**", timeout=200)
+    token = tokenn.text
     try:
       await tokenn.reply_text("**♪ جاري فحص التوكن ..🚦⚡**")
       bot = Client("Cloner", api_id=API_ID, api_hash=API_HASH, bot_token=token, in_memory=True)

@@ -1,12 +1,26 @@
-# متطلبات التنصيب #
-OWNER = ["ISIIQ","e2zzz"]
-OWNER_NAME = "KERO DEV"
-BOT_TOKEN = "8355863539:AAGVsbH1TaLNVX8bL_o_NZicVAyuW6-Fc4Q"
-DATABASE = "mongodb+srv://Zohary23:ZOHARY23@cluster0.kgxrztg.mongodb.net/?retryWrites=true&w=majority"
+# ───────────────────────────────
+# إعدادات البوت والمتطلبات
+# ───────────────────────────────
+
+# صاحب البوت
+OWNER = ["ISIIQ"]
+OWNER_NAME = "Mimo"
+
+# توكن البوت
+BOT_TOKEN = "8425933356:AAH24SLpnBOQJdFvAczyqTRCZIw7tf4L4_Y"
+
+# قاعدة البيانات (MongoDB)
+DATABASE = "mongodb+srv://Maminada:SGVIP39F501Rk9i5@cluster0.yvh3h1j.mongodb.net/?appName=Cluster0&authSource=admin&w=majority"
+
+# روابط القناة والمجموعة
 CHANNEL = "https://t.me/E_BBN"
 GROUP = "https://t.me/JoyBoyIQ"
-VIDEO = "https://graph.org/file/bbe526c61648eebca422c.jpg"
-LOGS = "ISIIQ"
-API_ID = 14823185
-API_HASH = "68493d4100bf829b3a84a43f0269bed6"
 
+# رابط صورة أو فيديو
+VIDEO = "https://graph.org/file/bbe526c61648eebca422c.jpg"
+PHOTO = "https://graph.org/file/bbe526c61648eebca422c.jpg"
+# شات تسجيل الأحداث
+LOGS = 8457593460  # خليها int مش str لو هتستخدم ID فعلي
+
+# اسم المستخدم الخاص بالبوت
+bot_username = "M_Y_0_Bot"

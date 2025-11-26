@@ -1,32 +1,78 @@
+import yt_dlp
 import os
-import re
-import textwrap
 import asyncio
 from typing import Union
 
-import aiofiles
-import aiohttp
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 from pyrogram import Client, filters
+from pyrogram import Client as client
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
+
+from config import appp, OWNER, OWNER_NAME, VIDEO, PHOTO
+from KERO.Data import get_data
 from googletrans import Translator
-from pytgcalls import PyTgCalls, StreamType
-from pytgcalls.types import (JoinedGroupCallParticipant, LeftGroupCallParticipant, Update)
-from pytgcalls.types.input_stream import AudioPiped, AudioVideoPiped
-from pytgcalls.types.stream import StreamAudioEnded
-from pytgcalls.types.input_stream.quality import (
-    HighQualityAudio, HighQualityVideo, LowQualityAudio,
-    LowQualityVideo, MediumQualityAudio, MediumQualityVideo
+from KERO.Data import (get_call, get_app, get_userbot, get_group, get_channel, must_join)
+
+from config import (
+    API_ID,
+    API_HASH,
+    MONGO_DB_URL,
+    user,
+    dev,
+    call,
+    logger,
+    logger_mode,
+    botname,
+    helper as ass,
 )
 
-from config import appp, OWNER, OWNER_NAME, VIDEO, API_ID, API_HASH, MONGO_DB_URL, user, dev, call, logger, logger_mode, botname, helper as ass
-from KERO.Data import get_data, get_call, get_app, get_userbot, get_group, get_channel, must_join
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient as _mongo_client_
 from pymongo import MongoClient
+
 from youtube_search import YoutubeSearch
 from youtubesearchpython.__future__ import VideosSearch
+
+# -------------------------
+# 🔧 FIXED pytgcalls imports
+# -------------------------
+
+from pytgcalls import PyTgCalls
 from pyrogram.errors.exceptions.bad_request_400 import UserNotParticipant
-import yt_dlp
+
+# النسخ الجديدة ما فيهاش JoinedGroupCallParticipant / LeftGroupCallParticipant
+# لذلك نستبدلهم بـ GroupCallParticipant
+
+from pytgcalls.types import Update
+from pytgcalls.types import GroupCallParticipant as JoinedGroupCallParticipant
+from pytgcalls.types import GroupCallParticipant as LeftGroupCallParticipant
+
+from pytgcalls.types.input_stream import AudioPiped, AudioVideoPiped
+from pytgcalls.types.stream import StreamAudioEnded
+
+from pytgcalls.types.input_stream.quality import (
+    HighQualityAudio,
+    HighQualityVideo,
+    LowQualityAudio,
+    LowQualityVideo,
+    MediumQualityAudio,
+    MediumQualityVideo
+)
+
+# -------------------------
+# باقي المكتبات
+# -------------------------
+
+import re
+import textwrap
+import aiofiles
+import aiohttp
+from PIL import (
+    Image,
+    ImageDraw,
+    ImageEnhance,
+    ImageFilter,
+    ImageFont,
+    ImageOps
+)
 
 translator = Translator()
 
@@ -72,30 +118,22 @@ async def gen_thumb(videoid, photo):
             except:
                 channel = "Unknown Channel"
 
-        # تحميل الصورة
         async with aiohttp.ClientSession() as session:
             async with session.get(thumbnail) as resp:
                 if resp.status == 200:
-                    f = await aiofiles.open(f"thumb{videoid}.png", mode="wb")
+                    f = await aiofiles.open(
+                        f"thumb{videoid}.png", mode="wb"
+                    )
                     await f.write(await resp.read())
                     await f.close()
 
-        # افتح الصورة اللي تم تحميلها
         youtube = Image.open(f"thumb{videoid}.png")
-
-        # اتأكد من وجود الصورة الافتراضية
-        if not os.path.isfile(photo):
-            photo = "default.png"
-
-        KEROv = Image.open(photo)
-
-        # تعديل الصورة
+        KEROv = Image.open(f"{photo}")
         image1 = changeImageSize(1280, 720, youtube)
         image2 = image1.convert("RGBA")
-        background = image2.filter(ImageFilter.BoxBlur(5))
-        background = ImageEnhance.Brightness(background).enhance(0.6)
-
-        # قص اللوغو
+        background = image2.filter(filter=ImageFilter.BoxBlur(5))
+        enhancer = ImageEnhance.Brightness(background)
+        background = enhancer.enhance(0.6)
         Xcenter = KEROv.width / 2
         Ycenter = KEROv.height / 2
         x1 = Xcenter - 250
@@ -103,26 +141,15 @@ async def gen_thumb(videoid, photo):
         x2 = Xcenter + 250
         y2 = Ycenter + 250
         logo = KEROv.crop((x1, y1, x2, y2))
-        logo.thumbnail((520, 520), Image.LANCZOS)
+        logo.thumbnail((520, 520), Image.ANTIALIAS)
         logo = ImageOps.expand(logo, border=15, fill="white")
         background.paste(logo, (50, 100))
-
         draw = ImageDraw.Draw(background)
-
-        # الخطوط
         font = ImageFont.truetype("font2.ttf", 40)
         font2 = ImageFont.truetype("font2.ttf", 70)
         arial = ImageFont.truetype("font2.ttf", 30)
         name_font = ImageFont.truetype("font.ttf", 30)
-
         para = textwrap.wrap(title, width=32)
-
-        background.save(f"{photo}.png")
-        return f"{photo}.png"
-
-    except Exception as e:
-        print("Error generating thumbnail:", e)
-        return "default.png"
         j = 0
         draw.text(
             (600, 150),
@@ -184,8 +211,6 @@ async def gen_thumb(videoid, photo):
 
 
 mongodb = _mongo_client_(MONGO_DB_URL)
-db_users = mongodb["bot_db"]["users"]   # لكل المستخدمين
-db_chats = mongodb["bot_db"]["chats"]   # لكل الشاتات
 
 
 db = {}
@@ -218,86 +243,80 @@ async def add(
     db[chat_id].append(put)
     return
 
-# ========== DATABASE HANDLER ==========
+# Users
 
-from motor.motor_asyncio import AsyncIOMotorClient
-
-MONGO_URL = "mongodb+srv://m7921742:clfYo1VIqZrvZRog@cluster0.onagyhb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-
-MAIN_DB_NAME = 'mimo'
-
-mongo_client = AsyncIOMotorClient(MONGO_URL)
-
-async def get_data(client=None):
-    return mongo_client[MAIN_DB_NAME]
-
-
-# ========== USERS SYSTEM ==========
 
 async def is_served_user(client, user_id: int) -> bool:
-    db = await get_data(client)
-    users = db.users
-    user = await users.find_one({"user_id": user_id})
-    return bool(user)
+    userdb = await get_data(client)
+    userdb = userdb.users
+    user = await userdb.find_one({"user_id": user_id})
+    if not user:
+        return False
+    return True
 
 
 async def get_served_users(client) -> list:
-    db = await get_data(client)
-    users = db.users
+    userdb = await get_data(client)
+    userdb = userdb.users 
     users_list = []
-    async for user in users.find({"user_id": {"$gt": 0}}):
+    async for user in userdb.find({"user_id": {"$gt": 0}}):
         users_list.append(user)
     return users_list
 
 
 async def add_served_user(client, user_id: int):
-    db = await get_data(client)
-    users = db.users
-    if await is_served_user(client, user_id):
+    userdb = await get_data(client)
+    userdb = userdb.users
+    is_served = await is_served_user(client, user_id)
+    if is_served:
         return
-    return await users.insert_one({"user_id": user_id})
-
+    return await userdb.insert_one({"user_id": user_id})
 
 async def del_served_user(client, user_id: int):
-    db = await get_data(client)
-    users = db.users
-    if not await is_served_user(client, user_id):
+    chats = await get_data(client)
+    chatsdb = chats.users
+    is_served = await is_served_user(client, user_id)
+    if not is_served:
         return
-    return await users.delete_one({"user_id": user_id})
+    return await chatsdb.delete_one({"user_id": user_id})
 
+# Served Chats
 
-# ========== CHATS SYSTEM ==========
 
 async def get_served_chats(client) -> list:
-    db = await get_data(client)
-    chats = db.chats
+    chats = await get_data(client)
+    chatsdb = chats.chats
     chats_list = []
-    async for chat in chats.find({"chat_id": {"$lt": 0}}):
+    async for chat in chatsdb.find({"chat_id": {"$lt": 0}}):
         chats_list.append(chat)
     return chats_list
 
 
 async def is_served_chat(client, chat_id: int) -> bool:
-    db = await get_data(client)
-    chats = db.chats
-    chat = await chats.find_one({"chat_id": chat_id})
-    return bool(chat)
+    chats = await get_data(client)
+    chatsdb = chats.chats
+    chat = await chatsdb.find_one({"chat_id": chat_id})
+    if not chat:
+        return False
+    return True
 
 
 async def add_served_chat(client, chat_id: int):
-    db = await get_data(client)
-    chats = db.chats
-    if await is_served_chat(client, chat_id):
+    chats = await get_data(client)
+    chatsdb = chats.chats
+    is_served = await is_served_chat(client, chat_id)
+    if is_served:
         return
-    return await chats.insert_one({"chat_id": chat_id})
+    return await chatsdb.insert_one({"chat_id": chat_id})
 
 
 async def del_served_chat(client, chat_id: int):
-    db = await get_data(client)
-    chats = db.chats
-    if not await is_served_chat(client, chat_id):
+    chats = await get_data(client)
+    chatsdb = chats.chats
+    is_served = await is_served_chat(client, chat_id)
+    if not is_served:
         return
-    return await chats.delete_one({"chat_id": chat_id})
+    return await chatsdb.delete_one({"chat_id": chat_id})
 
 # Served Call
 
