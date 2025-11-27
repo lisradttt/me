@@ -12,7 +12,14 @@ async def arbic(client: Client, query: CallbackQuery):
     dev = await get_dev(bot.username)
     devname = await get_dev_name(client, bot.username)
     await query.answer("القائمة الرئيسية")
-    await query.edit_message_text(f"**{query.from_user.mention} : مرحباً بك عزيزي **\n\n**انا بوت تشغيل موسيقى صوتية ومرئية .⚡**\n**قم بإضافة البوت إلي مجموعتك او قناتك .⚡**\n**سيتم تفعيل البوت وانضمام المساعد تلقائياً**\n**في حال مواجهت مشاكل انضم هنا **\n**@ **\n**استخدم الازرار لمعرفه اوامر الاستخدام .⚡ **",
+    await query.edit_message_text(
+        f"**{query.from_user.mention} : مرحباً بك عزيزي **\n\n"
+        f"**انا بوت تشغيل موسيقى صوتية ومرئية .⚡**\n"
+        f"**قم بإضافة البوت إلي مجموعتك او قناتك .⚡**\n"
+        f"**سيتم تفعيل البوت وانضمام المساعد تلقائياً**\n"
+        f"**في حال مواجهت مشاكل انضم هنا **\n"
+        f"**{GROUP}**\n"
+        f"**استخدم الازرار لمعرفه اوامر الاستخدام .⚡**",
         reply_markup=InlineKeyboardMarkup(
             [
                 [
@@ -21,24 +28,18 @@ async def arbic(client: Client, query: CallbackQuery):
                         url=f"https://t.me/{bot.username}?startgroup=true",
                     )
                 ],
-                [InlineKeyboardButton("المطور كيرو", url=f"https://t.me/AT_W2")],
-                [InlineKeyboardButton("المبرمج مشاكس", url=f"https://t.me/AT_W3")],
+                [InlineKeyboardButton("المطور كيرو", url="https://t.me/AT_W2")],
+                [InlineKeyboardButton("المبرمج مشاكس", url="https://t.me/AT_W3")],
                 [
                     InlineKeyboardButton("طريقة التشغيل .", callback_data="bcmds"),
                     InlineKeyboardButton("طريقة التفعيل.", callback_data="bhowtouse"),
                 ],
                 [
-                    InlineKeyboardButton(
-                        "جروب البوت.", url=f"{gr}"
-                    ),
-                    InlineKeyboardButton(
-                        "قناه التحديثات.", url=f"{ch}"
-                    ),
+                    InlineKeyboardButton("جروب البوت.", url=f"{gr}"),
+                    InlineKeyboardButton("قناه التحديثات.", url=f"{ch}"),
                 ],
                 [
-                    InlineKeyboardButton(
-                        f"{devname}", user_id=f"{dev}"
-                    )
+                    InlineKeyboardButton(f"{devname}", user_id=dev)
                 ],
             ]
         ),
@@ -54,11 +55,11 @@ async def english(client: Client, query: CallbackQuery):
     devname = await get_dev_name(client, bot.username)
     await query.answer("Home Start")
     await query.edit_message_text(
-    f"""A Telegram Music Bot
-Played Music and Video in VC
-Bot Online Now 
-Add Me To Your Chat
-Powered By [{OWNER_NAME}]""",
+        f"**A Telegram Music Bot**\n"
+        f"**Played Music and Video in VC**\n"
+        f"**Bot Online Now**\n"
+        f"**Add Me To Your Chat**\n"
+        f"**Powered By {OWNER_NAME}**",
         reply_markup=InlineKeyboardMarkup(
             [
                 [
@@ -72,17 +73,11 @@ Powered By [{OWNER_NAME}]""",
                     InlineKeyboardButton("Basic Guide", callback_data="cbhowtouse")
                 ],
                 [
-                    InlineKeyboardButton(
-                        "Group", url=f"{gr}"
-                    ),
-                    InlineKeyboardButton(
-                        "Channel", url=f"{ch}"
-                    ),
+                    InlineKeyboardButton("Group", url=f"{gr}"),
+                    InlineKeyboardButton("Channel", url=f"{ch}"),
                 ],
                 [
-                    InlineKeyboardButton(
-                        f"{devname}", user_id=f"{dev}"
-                    )
+                    InlineKeyboardButton(f"{devname}", user_id=dev)
                 ],
             ]
         ),
@@ -93,16 +88,16 @@ Powered By [{OWNER_NAME}]""",
 async def cbguides(_, query: CallbackQuery):
     await query.answer("user guide")
     await query.edit_message_text(
-        f"""❓ **Basic Guide for using this bot:**
-1.) **First, add me to your group.**
-2.) **Then, promote me as administrator and give all permissions except Anonymous Admin.**
-3.) **After promoting me, type /reload in group to refresh the admin data.**
-3.) **Add Assistant to your group or invite her.**
-4.) **Turn on the video chat first before start to play video/music.**
-5.) **Sometimes, reloading the bot by using /reload command can help you to fix some problem.**
-📌 **If the userbot not joined to video chat, make sure if the video chat already turned on.**
-💡 **If you have a follow-up questions about this bot, you can tell it on my support chat here: @K_o_c_1**
-⚡ __ Developer by [{OWNER_NAME}]""",
+        f"❓ **Basic Guide for using this bot:**\n\n"
+        f"1.) **First, add me to your group.**\n"
+        f"2.) **Then, promote me as administrator and give all permissions except Anonymous Admin.**\n"
+        f"3.) **After promoting me, type /reload in group to refresh the admin data.**\n"
+        f"4.) **Add Assistant to your group or invite her.**\n"
+        f"5.) **Turn on the video chat first before start to play video/music.**\n"
+        f"6.) **Sometimes, reloading the bot by using /reload command can help you to fix some problem.**\n\n"
+        f"📌 **If the userbot not joined to video chat, make sure if the video chat already turned on.**\n\n"
+        f"💡 **If you have a follow-up questions about this bot, you can tell it on my support chat here: {GROUP}**\n\n"
+        f"⚡ __Developer by {OWNER_NAME}__",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("🔙 Go Back", callback_data="english")]]
         ),
@@ -113,14 +108,14 @@ async def cbguides(_, query: CallbackQuery):
 async def cbcmds(_, query: CallbackQuery):
     await query.answer("commands menu")
     await query.edit_message_text(
-        f"""✨ **Hello [{query.message.from_user.first_name}](tg://user?id={query.message.from_user.id}) !**
-» **press the button below to read the explanation and see the list of available commands !**
-⚡ __Powered by [{OWNER_NAME}] A.I__""",
+        f"✨ **Hello {query.from_user.first_name}!**\n\n"
+        f"» **press the button below to read the explanation and see the list of available commands !**\n\n"
+        f"⚡ __Powered by {OWNER_NAME}__",
         reply_markup=InlineKeyboardMarkup(
             [
                 [
                     InlineKeyboardButton("Admin Cmd", callback_data="cbadmin"),
-                    InlineKeyboardButton("Bisc Cmd", callback_data="cbbasic"),
+                    InlineKeyboardButton("Basic Cmd", callback_data="cbbasic"),
                 ],[
                     InlineKeyboardButton("Sudo Cmd", callback_data="cbsudo")
                 ],[
@@ -135,15 +130,15 @@ async def cbcmds(_, query: CallbackQuery):
 async def cbbasic(_, query: CallbackQuery):
     await query.answer("basic commands")
     await query.edit_message_text(
-        f"""🏮 here is the basic commands:
-» /play (song name/link) - play music on video chat
-» /vplay (video name/link) - play video on video chat
-» /video (query) - download video from youtube
-» /song (query) - download song from youtube
-» /search (query) - search a youtube video link
-» /ping - show the bot ping status
-» /alive - show the bot alive info (in group)
-⚡️ __ Developer by [{OWNER_NAME}]""",
+        f"🏮 **here is the basic commands:**\n\n"
+        f"» /play (song name/link) - play music on video chat\n"
+        f"» /vplay (video name/link) - play video on video chat\n"
+        f"» /video (query) - download video from youtube\n"
+        f"» /song (query) - download song from youtube\n"
+        f"» /search (query) - search a youtube video link\n"
+        f"» /ping - show the bot ping status\n"
+        f"» /alive - show the bot alive info (in group)\n\n"
+        f"⚡️ __Developer by {OWNER_NAME}__",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("🔙 Go Back", callback_data="cbcmds")]]
         ),
@@ -154,13 +149,13 @@ async def cbbasic(_, query: CallbackQuery):
 async def cbadmin(_, query: CallbackQuery):
     await query.answer("admin commands")
     await query.edit_message_text(
-        f"""🏮 here is the admin commands:
-» /pause - pause the stream
-» /resume - resume the stream
-» /skip - switch to next stream
-» /stop - stop the streaming
-» /loop - loop the streaming
-⚡️ __ Developer by [{OWNER_NAME}]""",
+        f"🏮 **here is the admin commands:**\n\n"
+        f"» /pause - pause the stream\n"
+        f"» /resume - resume the stream\n"
+        f"» /skip - switch to next stream\n"
+        f"» /stop - stop the streaming\n"
+        f"» /loop - loop the streaming\n\n"
+        f"⚡️ __Developer by {OWNER_NAME}__",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("🔙 Go Back", callback_data="cbcmds")]]
         ),
@@ -170,17 +165,17 @@ async def cbadmin(_, query: CallbackQuery):
 async def cbsudo(_, query: CallbackQuery):
     await query.answer("SUDO COMMANDS")
     await query.edit_message_text(
-        f"""🏮 here is the sudo commands:
-» • تعين اسم البوت • : لتعين اسم جديد للبوت 
-» • الاحصائيات • : لمعرفه احصائيات البوت
-» • المجموعات • : لعرض قائمه المجموعات 
-» • المستخدمين • : لعرض قائمه المستخدمين 
-» • قسم الاذاعه • : لعرض قسم التحكمف الاذاعه والتوجيه
-» • قسم التحكم في الحساب المساعد • : لعرض قائمه التحكم ف الحساب المساعد
-» • تفعيل سجل التشغيل • : لتفعيل سجل التشغيل ف المجموعه 
-» • تعطيل سجل التشغيل • : لتعطيل سجل التشغيل ف المجموعه
-» • تغير مكان سجل التشغيل • : لتغير مجموعة السجل
-⚡ __ Developer by [{OWNER_NAME}]""",
+        f"🏮 **here is the sudo commands:**\n\n"
+        f"» • تعين اسم البوت • : لتعين اسم جديد للبوت\n"
+        f"» • الاحصائيات • : لمعرفه احصائيات البوت\n"
+        f"» • المجموعات • : لعرض قائمه المجموعات\n"
+        f"» • المستخدمين • : لعرض قائمه المستخدمين\n"
+        f"» • قسم الاذاعه • : لعرض قسم التحكم في الاذاعه والتوجيه\n"
+        f"» • قسم التحكم في الحساب المساعد • : لعرض قائمه التحكم في الحساب المساعد\n"
+        f"» • تفعيل سجل التشغيل • : لتفعيل سجل التشغيل في المجموعه\n"
+        f"» • تعطيل سجل التشغيل • : لتعطيل سجل التشغيل في المجموعه\n"
+        f"» • تغير مكان سجل التشغيل • : لتغير مجموعة السجل\n\n"
+        f"⚡ __Developer by {OWNER_NAME}__",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("🔙 Go Back", callback_data="cbcmds")]]
         ),
@@ -189,17 +184,18 @@ async def cbsudo(_, query: CallbackQuery):
 
 @Client.on_callback_query(filters.regex("bhowtouse"))
 async def acbguides(_, query: CallbackQuery):
+    await query.answer("user guide")
     await query.edit_message_text(
-        f""" **طريقة تفعيل البوت في مجموعتك ⚡♥️:**
-1.) **اولا قم بإضافة البوت اللي مجموعتك ⚡.**
-2.) **قم بترقيى البوت مشرف مع الصلاحيات المطلوبة ⚡.**
-3.) ** لتحديث قائمة الادمن /Reload قم بكتابة الامر ⚡.**
-3.) ** قم بإضافة الحساب المساعد اللي المجموعة ⚡.**
-4.) **تاكد كن تشغيل المحادثة المرئية ⚡.**
-5.) **لتحديث قائمة الادمنيه /Reload اذا واجهت خطأ قم بكتابة الامر ⚡.**
-📌 ** اذا لم يستطع الحساب المساعد الانضمام اللي المحادثة المرئيه قم بإعادة تشغيل المحادثه ⚡.**
-💡 **في حال واجهت اي مشكلة اخري يمكنك التواصل مع المطور من هن : {GROUP} **
-⚡ __ Developer by [{OWNER_NAME}]""",
+        f"**طريقة تفعيل البوت في مجموعتك ⚡♥️:**\n\n"
+        f"1.) **اولا قم بإضافة البوت اللي مجموعتك ⚡.**\n"
+        f"2.) **قم بترقية البوت مشرف مع الصلاحيات المطلوبة ⚡.**\n"
+        f"3.) **لتحديث قائمة الادمن قم بكتابة الامر /reload ⚡.**\n"
+        f"4.) **قم بإضافة الحساب المساعد اللي المجموعة ⚡.**\n"
+        f"5.) **تاكد من تشغيل المحادثة المرئية ⚡.**\n"
+        f"6.) **اذا واجهت خطأ قم بكتابة الامر /reload لتحديث قائمة الادمنيه ⚡.**\n\n"
+        f"📌 **اذا لم يستطع الحساب المساعد الانضمام اللي المحادثة المرئيه قم بإعادة تشغيل المحادثه ⚡.**\n\n"
+        f"💡 **في حال واجهت اي مشكلة اخري يمكنك التواصل مع المطور من هنا: {GROUP}**\n\n"
+        f"⚡ __Developer by {OWNER_NAME}__",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("العودة", callback_data="arbic")]]
         ),
@@ -208,10 +204,11 @@ async def acbguides(_, query: CallbackQuery):
 
 @Client.on_callback_query(filters.regex("bcmds"))
 async def acbcmds(_, query: CallbackQuery):
+    await query.answer("commands menu")
     await query.edit_message_text(
-        f""" **Hello [{query.message.from_user.first_name}](tg://user?id={query.message.from_user.id}) !**
-» **اتبع الازرار بالاسفل لمعرفة طريقة التشغيل ⚡**
-⚡ __ Developer by [{OWNER_NAME}]""",
+        f"**مرحباً {query.from_user.first_name}!**\n\n"
+        f"» **اتبع الازرار بالاسفل لمعرفة طريقة التشغيل ⚡**\n\n"
+        f"⚡ __Developer by {OWNER_NAME}__",
         reply_markup=InlineKeyboardMarkup(
             [
                 [
@@ -229,17 +226,18 @@ async def acbcmds(_, query: CallbackQuery):
 
 @Client.on_callback_query(filters.regex("bbasic"))
 async def acbbasic(_, query: CallbackQuery):
+    await query.answer("basic commands")
     await query.edit_message_text(
-        f"""اوامر التشغيل ⚡:
-» شغل او تشغيل - لتشغيل الموسيقى  
-» فيد او فيديو  - لتشغيل مقطع فيديو 
-» تشغيل عشوائي  - لتشغيل اغنيه عشوائية 
-» بحث - للبحث عن نتائج في اليوتيوب
-» حمل + اسم الفيديو - لتحميل مقطع فيديو
-» نزل + اسم الاغنيه - لتحميل ملف صوتي 
-» بنج - عرض سرعة الاستجابة
-» سورس - لعرض معلومات البوت 
-⚡️ __ Developer by [{OWNER_NAME}]""",
+        f"**اوامر التشغيل ⚡:**\n\n"
+        f"» شغل او تشغيل - لتشغيل الموسيقى\n"
+        f"» فيد او فيديو - لتشغيل مقطع فيديو\n"
+        f"» تشغيل عشوائي - لتشغيل اغنيه عشوائية\n"
+        f"» بحث - للبحث عن نتائج في اليوتيوب\n"
+        f"» حمل + اسم الفيديو - لتحميل مقطع فيديو\n"
+        f"» نزل + اسم الاغنيه - لتحميل ملف صوتي\n"
+        f"» بنج - عرض سرعة الاستجابة\n"
+        f"» سورس - لعرض معلومات البوت\n\n"
+        f"⚡️ __Developer by {OWNER_NAME}__",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("العودة", callback_data="bcmds")]]
         ),
@@ -248,14 +246,15 @@ async def acbbasic(_, query: CallbackQuery):
 
 @Client.on_callback_query(filters.regex("badmin"))
 async def acbadmin(_, query: CallbackQuery):
+    await query.answer("admin commands")
     await query.edit_message_text(
-        f"""اوامر التحكم للخاصة بالادمنية:
-» ايقاف مؤقت - ايقاف التشغيل موقتأ
-» استكمال - لاستكمال التشغيل
-» تخطي - لتخطي تشغيل الحالي
-» ايقاف او اسكت - لايقاف تشغيل الحالي 
-» تكرار او كررها - لتكرار التشغيل الحالي
-⚡️ __ Developer by [{OWNER_NAME}]""",
+        f"**اوامر التحكم الخاصة بالادمنية:**\n\n"
+        f"» ايقاف مؤقت - ايقاف التشغيل موقتاً\n"
+        f"» استكمال - لاستكمال التشغيل\n"
+        f"» تخطي - لتخطي التشغيل الحالي\n"
+        f"» ايقاف او اسكت - لايقاف التشغيل الحالي\n"
+        f"» تكرار او كررها - لتكرار التشغيل الحالي\n\n"
+        f"⚡️ __Developer by {OWNER_NAME}__",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("العودة", callback_data="bcmds")]]
         ),
@@ -263,20 +262,19 @@ async def acbadmin(_, query: CallbackQuery):
 
 @Client.on_callback_query(filters.regex("bsudo"))
 async def sudo_set(client: Client, query: CallbackQuery):
-    await query.answer(" اوامر المطورين")
+    await query.answer("اوامر المطورين")
     await query.edit_message_text(
-        f"""✏ اوامر المطورين.
-» • تعين اسم البوت • : لتعين اسم جديد للبوت 
-» • الاحصائيات • : لمعرفه احصائيات البوت
-» • المجموعات • : لعرض قائمه المجموعات 
-» • المستخدمين • : لعرض قائمه المستخدمين 
-» • قسم الاذاعه • : لعرض قسم التحكمف الاذاعه والتوجيه
-» • قسم التحكم في الحساب المساعد • : لعرض قائمه التحكم ف الحساب المساعد
-» • تفعيل سجل التشغيل • : لتفعيل سجل التشغيل ف المجموعه 
-» • تعطيل سجل التشغيل • : لتعطيل سجل التشغيل ف المجموعه
-» • تغير مكان سجل التشغيل • : لتغير مجموعة السجل 
-
-⚡ __ Developer by [{OWNER_NAME}]""",
+        f"**✏ اوامر المطورين:**\n\n"
+        f"» • تعين اسم البوت • : لتعين اسم جديد للبوت\n"
+        f"» • الاحصائيات • : لمعرفه احصائيات البوت\n"
+        f"» • المجموعات • : لعرض قائمه المجموعات\n"
+        f"» • المستخدمين • : لعرض قائمه المستخدمين\n"
+        f"» • قسم الاذاعه • : لعرض قسم التحكم في الاذاعه والتوجيه\n"
+        f"» • قسم التحكم في الحساب المساعد • : لعرض قائمه التحكم في الحساب المساعد\n"
+        f"» • تفعيل سجل التشغيل • : لتفعيل سجل التشغيل في المجموعه\n"
+        f"» • تعطيل سجل التشغيل • : لتعطيل سجل التشغيل في المجموعه\n"
+        f"» • تغير مكان سجل التشغيل • : لتغير مجموعة السجل\n\n"
+        f"⚡ __Developer by {OWNER_NAME}__",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("العودة", callback_data="bcmds")]]
         ),

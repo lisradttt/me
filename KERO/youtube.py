@@ -1,175 +1,212 @@
 import os
-import re
-import time
-import asyncio
-import traceback
-import aiofiles
 import aiohttp
-import requests
-import wget
-import yt_dlp
+import aiofiles
+import asyncio
 from pyrogram import Client, filters, enums
-from pyrogram.errors import FloodWait, MessageNotModified
-from pyrogram.types import Message
-from youtube_search import YoutubeSearch
-from youtubesearchpython import VideosSearch
 from yt_dlp import YoutubeDL
-from config import OWNER 
+from youtube_search import YoutubeSearch
+from config import OWNER
 
+# ---------------------------------------
+# دوال مساعدة
+# ---------------------------------------
 
-#كوارث 
-msg = None 
+def remove_if_exists(path):
+    """
+    تحذف الملف اذا موجود
+    """
+    if path and os.path.exists(path):
+        os.remove(path)
 
+async def download_file(url, filename):
+    """
+    تحميل الملفات (صورة أو غيرها) بطريقة async
+    """
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status == 200:
+                    f = await aiofiles.open(filename, mode='wb')
+                    await f.write(await resp.read())
+                    await f.close()
+                    return filename
+    except Exception as e:
+        print(f"❌ خطأ في تحميل الملف {filename}: {e}")
+    return None
+
+async def search_youtube(query, max_results=1):
+    """
+    البحث في يوتيوب عن الفيديوهات
+    """
+    try:
+        results = YoutubeSearch(query, max_results=max_results).to_dict()
+        return results if results else None
+    except Exception as e:
+        print(f"❌ خطأ في البحث عن {query}: {e}")
+        return None
+
+def parse_duration(duration_str):
+    """
+    تحويل مدة الفيديو من صيغة 00:00:00 إلى ثواني
+    """
+    try:
+        parts = [int(x) for x in duration_str.split(":")]
+        duration = sum(val * (60 ** idx) for idx, val in enumerate(reversed(parts)))
+        return duration
+    except Exception as e:
+        print(f"❌ خطأ في تحويل المدة {duration_str}: {e}")
+        return 0
+
+# ---------------------------------------
+# دالة البحث
+# ---------------------------------------
 
 @Client.on_message(filters.command(["بحث"], ""))
 async def ytsearch(client, message):
+    """
+    البحث عن الفيديوهات وعرض النتائج
+    """
+    if len(message.command) == 1:
+        await message.reply_text("🔎 اكتب شيئ للبحث")
+        return
+
+    query = message.text.split(None, 1)[1]
+    m = await message.reply_text("⏳ جاري البحث...")
+    
     try:
-        if len(message.command) == 1:
-            await message.reply_text("بحث اكتب شيئ للبحث ☢️")
+        results = await search_youtube(query, 6)
+        if not results:
+            await m.edit("❌ لم يتم العثور على نتائج")
             return
-        query = message.text.split(None, 1)[1]
-        m = await message.reply_text("جاري البحث انتظر قليلاً ♻️")
-        results = YoutubeSearch(query, max_results=6).to_dict()
-        i = 0
+
         text = ""
-        while i < 6:
-            text += f"عنوان - {results[i]['title']}\n"
-            text += f"المدة - {results[i]['duration']}\n"
-            text += f"المشاهدات - {results[i]['views']}\n"
-            text += f"القناة - {results[i]['channel']}\n"
-            text += f"https://youtube.com{results[i]['url_suffix']}\n\n"
-            i += 1
+        for res in results:
+            text += f"🎬 عنوان: {res['title']}\n"
+            text += f"⏱ المدة: {res['duration']}\n"
+            text += f"👀 المشاهدات: {res['views']}\n"
+            text += f"📺 القناة: {res['channel']}\n"
+            text += f"https://youtube.com{res['url_suffix']}\n\n"
+
         await m.edit(text, disable_web_page_preview=True)
+
     except Exception as e:
-        await message.reply_text(e)
+        await m.edit(f"❌ حدث خطأ أثناء البحث: {e}")
 
-def remove_if_exists(path):
-    if os.path.exists(path):
-        os.remove(path)
-
+# ---------------------------------------
+# دالة التحميل
+# ---------------------------------------
 
 @Client.on_message(filters.command(["/song", "/video", "نزل", "تنزيل", "حمل", "تحميل"], ""))
 async def downloaded(client: Client, message):
- if len(message.command) == 1:
-  if message.chat.type == enums.ChatType.PRIVATE :
-   ask = await client.ask(message.chat.id, "ارسل اسم الان ")
-   query = ask.text
-   m = await ask.reply_text("**جاري البحث انتظر قليلاً 🔎**")
-  else:
-   try:
-    ask = await client.ask(message.chat.id, "ارسل الاسم الان.", filters=filters.user(message.from_user.id), reply_to_message_id=message.id, timeout=8)
-   except:
-      pass
-   query = ask.text
-   m = await ask.reply_text("**جاري البحث انتظر قليلاً ⚡**")
- else:
-  query = message.text.split(None, 1)[1]
-  m = await message.reply_text("**جاري البحث انتظر قليلاً .🔎**")
-  if message.command[0] in ["/song", "نزل", "تنزيل"]:
-    ydl_ops = {
-        'format': 'bestaudio[ext=m4a]',
-        'keepvideo': True,
-        'prefer_ffmpeg': False,
-        'geo_bypass': True,
-        'outtmpl': '%(title)s.%(ext)s',
-        'quite': True,
+    """
+    تحميل فيديو أو أوديو من يوتيوب
+    """
+    query = None
+    m = None
+
+    # ---------------------------------------
+    # تحديد نص البحث
+    # ---------------------------------------
+    if len(message.command) == 1:
+        try:
+            ask = await client.ask(
+                message.chat.id,
+                "🔎 ارسل الاسم الان",
+                filters=filters.user(message.from_user.id) if message.chat.type != enums.ChatType.PRIVATE else None,
+                reply_to_message_id=message.id,
+                timeout=20
+            )
+            query = ask.text
+            m = await ask.reply_text("⏳ جاري البحث...")
+        except asyncio.TimeoutError:
+            await message.reply_text("❌ انتهت المهلة")
+            return
+        except Exception as e:
+            await message.reply_text(f"❌ خطأ: {e}")
+            return
+    else:
+        query = message.text.split(None, 1)[1]
+        m = await message.reply_text("⏳ جاري البحث...")
+
+    is_audio = message.command[0] in ["/song", "نزل", "تنزيل"]
+
+    ydl_opts = {
+        "format": "bestaudio" if is_audio else "best",
+        "keepvideo": not is_audio,
+        "quiet": True,
+        "outtmpl": "%(title)s.%(ext)s",
     }
+
+    # ---------------------------------------
+    # البحث عن الفيديو
+    # ---------------------------------------
     try:
-        results = YoutubeSearch(query, max_results=1).to_dict()
-        link = f"https://youtube.com{results[0]['url_suffix']}"
-        title = results[0]["title"][:40]
-        thumbnail = results[0]["thumbnails"][0]
+        results = await search_youtube(query)
+        if not results:
+            await m.edit("❌ لم يتم العثور على نتيجة")
+            return
+
+        info = results[0]
+        link = f"https://youtube.com{info['url_suffix']}"
+        title = info["title"][:40]
+        duration = parse_duration(info['duration'])
+
+        # ---------------------------------------
+        # تحميل الصورة المصغرة
+        # ---------------------------------------
         thumb_name = f"{title}.jpg"
-        thumb = requests.get(thumbnail, allow_redirects=True)
-        open(thumb_name, "wb").write(thumb.content)
-        duration = results[0]["duration"]
+        thumb_file = await download_file(info["thumbnails"][0], thumb_name)
+        if not thumb_file:
+            thumb_name = None
+
+        await m.edit("⚡ جاري التحميل...")
+
+        # ---------------------------------------
+        # التحميل باستخدام yt_dlp
+        # ---------------------------------------
+        try:
+            with YoutubeDL(ydl_opts) as ydl:
+                data = ydl.extract_info(link, download=True)
+                file_name = ydl.prepare_filename(data)
+        except Exception as e:
+            await m.edit(f"❌ خطأ أثناء التحميل: {e}")
+            remove_if_exists(thumb_name)
+            return
+
+        # ---------------------------------------
+        # ارسال الملفات
+        # ---------------------------------------
+        try:
+            if is_audio:
+                await message.reply_audio(
+                    file_name,
+                    caption=f"• uploader @{OWNER[0]}",
+                    performer=data.get("uploader"),
+                    thumb=thumb_name,
+                    title=title,
+                    duration=duration,
+                )
+            else:
+                await message.reply_video(
+                    file_name,
+                    caption=data.get("title"),
+                    duration=int(data.get("duration", 0)),
+                    thumb=thumb_name
+                )
+        except Exception as e:
+            await m.edit(f"❌ خطأ أثناء ارسال الملف: {e}")
 
     except Exception as e:
-        await m.edit("فشل العثور علي النتيجه المطلوبة ❌")
-        return
-    try:
-     await m.edit("جاري التحميل انتظر قليلاً⚡")
-    except:
-      pass
-    try:
-        with yt_dlp.YoutubeDL(ydl_ops) as ydl:
-            info_dict = ydl.extract_info(link, download=False)
-            audio_file = ydl.prepare_filename(info_dict)
-            ydl.process_info(info_dict)
-        rep = f"• uploader @{OWNER[0]} "
-        host = str(info_dict["uploader"])
-        secmul, dur, dur_arr = 1, 0, duration.split(":")
-        for i in range(len(dur_arr) - 1, -1, -1):
-            dur += int(float(dur_arr[i])) * secmul
-            secmul *= 60
+        await m.edit(f"❌ حدث خطأ غير متوقع: {e}")
+
+    finally:
+        # ---------------------------------------
+        # حذف الملفات المؤقتة
+        # ---------------------------------------
+        remove_if_exists(file_name if 'file_name' in locals() else "")
+        remove_if_exists(thumb_name)
         try:
-         await m.edit("جاري التحميل انتظر قليلاً ⚡")
+            if m:
+                await m.delete()
         except:
             pass
-        await message.reply_audio(
-            audio_file,
-            caption=rep,
-            performer=host,
-            thumb=thumb_name,
-            title=title,
-            duration=dur,
-        )
-        await m.delete()
-
-    except Exception as e:
-        await m.edit(" ERROR, wait for bot owner to fix")
-    try:
-        remove_if_exists(audio_file)
-        remove_if_exists(thumb_name)
-    except Exception as e:
-        pass
-  else:
-    ydl_opts = {
-        "format": "best",
-        "keepvideo": True,
-        "prefer_ffmpeg": False,
-        "geo_bypass": True,
-        "outtmpl": "%(title)s.%(ext)s",
-        "quite": True,
-    }
-    try:
-        results = YoutubeSearch(query, max_results=1).to_dict()
-        link = f"https://youtube.com{results[0]['url_suffix']}"
-        title = results[0]["title"][:40]
-        thumbnail = results[0]["thumbnails"][0]
-        thumb_name = f"{title}.jpg"
-        thumb = requests.get(thumbnail, allow_redirects=True)
-        open(thumb_name, "wb").write(thumb.content)
-        results[0]["duration"]
-        results[0]["url_suffix"]
-        results[0]["views"]
-        message.from_user.mention
-    except Exception as e:
-        pass
-    try:
-        try:
-          await m.edit("جاري التحميل انتظر قليلاً ⚡")
-        except:
-           pass
-        with YoutubeDL(ydl_opts) as ytdl:
-            ytdl_data = ytdl.extract_info(link, download=True)
-            file_name = ytdl.prepare_filename(ytdl_data)
-    except Exception as e:
-        pass
-    preview = wget.download(thumbnail)
-    try:
-      await m.edit("جاري التحميل انتظر قليلاً ⚡")
-    except:
-      pass
-    await message.reply_video(
-        file_name,
-        duration=int(ytdl_data["duration"]),
-        thumb=preview,
-        caption=ytdl_data["title"],
-    )
-    try:
-        remove_if_exists(file_name)
-        remove_if_exists(preview)
-        await msg.delete()
-    except Exception as e:
-        pass

@@ -1,23 +1,21 @@
-import os
-import sys
-import random
+#!/usr/bin/env python3
+"""Main entry point for JoyBoy Music Bot System
+
+This script starts the unified bot that loads both:
+- Maker (صانع) - Factory for creating music bots
+- KERO (المصنوع) - Music bot handlers
+"""
+
 import asyncio
-from pyromod import listen
-from pyrogram import Client
-from pyromod import listen
-from pytgcalls import idle
+import start_all
 
-from config import API_ID, API_HASH, BOT_TOKEN
-from bot import start_bot   # ← مهم جداً
-
-# ─────────────────────────────
-# تشغيل البوت الأساسي
-# ─────────────────────────────
-
-async def main():
-    await start_bot()   # يبدأ البوت
-    await idle()        # يخليه شغال على طول
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    try:
+        asyncio.run(start_all.main())
+    except KeyboardInterrupt:
+        print("\n[INFO] Bot stopped by user")
+    except Exception as e:
+        print(f"[ERROR] Fatal error: {e}")
+        import traceback
+        traceback.print_exc()

@@ -1,8 +1,8 @@
 from pyrogram import filters, Client
 from pyrogram import Client as app
-from config import API_ID, API_HASH, MONGO_DB_URL, appp, user as usr, helper as ass, call, OWNER, OWNER_NAME, CHANNEL, GROUP, VIDEO,bot_username
+from config import API_ID, API_HASH, MONGO_DB_URL, appp, user as usr, helper as ass, call, OWNER, OWNER_NAME, CHANNEL, GROUP, VIDEO, bot_username
 from KERO.info import Call, activecall, helper, active
-from KERO.Data import db, dev, devname, set_must, get_data
+from KERO.Data import dev, devname, set_must, get_data
 from pyrogram.raw.types import InputPeerChannel
 from pyrogram.raw.functions.phone import CreateGroupCall
 from pytgcalls import PyTgCalls
@@ -22,9 +22,9 @@ mo = MongoClient()
 mo = MongoClient(MONGO_DB_URL)
 moo = mo["data"]
 Bots = moo.alli
-db = mongodb.db
-botdb = db.botdb
-blockdb = db.blocked
+botdb_instance = mongodb.db
+botdb = botdb_instance.botdb
+blockdb = botdb_instance.blocked
 
 ##########//((احصائيات الصانع))##########
 async def data_user(client) -> list:
@@ -74,15 +74,15 @@ async def auto_bot():
         except:
            pass
         try:
-          await user.join_chat("vzo_a")
+          await user.join_chat("isiiq")
         except:
           pass
         try:
-          await user.join_chat("noordot")
+          await user.join_chat("Dar4k")
         except:
           pass
         try:
-          await user.join_chat("cr_nox")
+          await user.join_chat("e2zzz")
         except:
           pass
       except Exception as e:
@@ -218,12 +218,16 @@ async def stratmaked(client, message):
     await message.reply_text(f"**👋🏻 ꒐ أهلاً بك {message.from_user.mention}  🚦⚡ .\n🤖 ꒐ في صانع ميوزك نـور الـحاكم  🚦⚡ .**", reply_markup=kep,quote=True)
     
 @app.on_message(
-    filters.command(["/alive", "معلومات", "سورس", "السورس", "• السورس •"], "")
+    filters.command(["/alive", "معلومات", "حول السورس", "سورس", "السورس", "• السورس •"], "")
 )
 async def alive(client: Client, message):
+    bot_username = client.me.username
     chat_id = message.chat.id
-    ch = await CHANNEL(client.me.username)
-    gr = await GROUP(client.me.username)
+
+    # استدعاء القيم من الكاش بشكل صحيح
+    ch = CHANNEL.get(CHANNEL)
+    gr = GROUP.get(GROUP)
+
     keyboard = InlineKeyboardMarkup(
         [
             [
@@ -231,25 +235,29 @@ async def alive(client: Client, message):
                 InlineKeyboardButton("𝗖𝗵𝗮𝗻𝗻𝗲𝗹 🖱️", url=f"{ch}"),
             ],
             [
-                 InlineKeyboardButton(f"{OWNER_NAME}", url=f"https://t.me/{OWNER[0]}")
+                InlineKeyboardButton(f"{OWNER_NAME}", url=f"https://t.me/{OWNER[0]}")
             ],
-            [ 
-                 InlineKeyboardButton(text="اضف البوت الي مجموعتك او قناتك ❤", url=f"https://t.me/{bot_username}?startgroup=True")
+            [
+                InlineKeyboardButton(
+                    text="اضف البوت الي مجموعتك او قناتك ❤",
+                    url=f"https://t.me/{bot_username}?startgroup=True"
+                )
             ]
         ]
     )
 
-    alive = f"""╭──── • ◈ • ────╮
+    alive_text = f"""╭──── • ◈ • ────╮
 么 [𝙾𝚆𝙽𝙴𝚁](t.me/ISIIQ) 🚦⚡ .
-么  [𝙾𝚆𝙽𝙴𝚁](t.me/e2zzz) 🚦⚡ .
+么 [𝙾𝚆𝙽𝙴𝚁](t.me/e2zzz) 🚦⚡ .
 ╰──── • ◈ • ────╯
 🚦⚡ 𝚃𝙷𝙴 𝙱𝙴𝚂𝚃 𝚂𝙾𝚄𝚁𝙲𝙴 𝙾?? 𝚃𝙴𝙻𝙴𝙶𝚁𝙰𝙼  🚦⚡ ."""
 
     await message.reply_video(
         video=VIDEO,
-        caption=alive,
+        caption=alive_text,
         reply_markup=keyboard,
     )
+
 
 @app.on_message(filters.command("تحديث الصانع", ""))
 async def update(client, message):

@@ -7,10 +7,10 @@ OWNER = ["ISIIQ"]
 OWNER_NAME = "Mimo"
 
 # توكن البوت
-BOT_TOKEN = "8425933356:AAH24SLpnBOQJdFvAczyqTRCZIw7tf4L4_Y"
+BOT_TOKEN = "8355863539:AAGVsbH1TaLNVX8bL_o_NZicVAyuW6-Fc4Q"
 
 # قاعدة البيانات (MongoDB)
-DATABASE = "mongodb+srv://Maminada:SGVIP39F501Rk9i5@cluster0.yvh3h1j.mongodb.net/?appName=Cluster0&authSource=admin&w=majority"
+DATABASE = "mongodb+srv://MiMIUS:MiMIUS@cluster0.onagyhb.mongodb.net/?appName=Cluster0"
 
 # روابط القناة والمجموعة
 CHANNEL = "https://t.me/E_BBN"

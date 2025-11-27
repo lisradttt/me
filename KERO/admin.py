@@ -81,13 +81,13 @@ async def admin_risghts(client: Client, CallbackQuery):
     if command == "stop":
         try:
          await call.leave_group_call(chat_id)
-        except:
-          pass
+        except Exception as e:
+          print(f"Error leaving call: {e}")
         await remove_active(bot_username, chat_id)
         await CallbackQuery.answer("تم انهاء التشغيل بنجاح ⚡", show_alert=True)
         await CallbackQuery.message.reply_text(f"{CallbackQuery.from_user.mention} **تم انهاء التشغيل بواسطه**")
-  except:
-     pass
+  except Exception as e:
+     print(f"Error in callback handler: {e}")
 
 
 
@@ -121,48 +121,70 @@ async def admin_risght(client: Client, message):
     elif command == "/stop" or command == "/end" or command == "اسكت" or command == "انهاء" or command == "ايقاف":
         try:
          await call.leave_group_call(chat_id)
-        except:
-         pass
+        except Exception as e:
+         print(f"Error leaving call: {e}")
         await remove_active(bot_username, chat_id)
         await message.reply_text(f"**تم انهاء التشغيل .**")
     elif command == "تكرار" or command == "كررها" or command == "/loop":
-            if len(message.text) == 1:
-               return await message.reply_text("**قم بتحديد مرات التكرار ..🖱️**")
-            x = message.text.split(None, 1)[1]
-            i = x
-            if i in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]:
-              x = i
-              xx = f"{x} مره"
-            elif x == "مره":
-              x = 1
-              xx = "مره واحده"
-            elif x == "مرتين":
-              x = 2
-              xx = "مرتين"
-            else:
-              return await message.reply_text("**خطأ في استخدام الامر ،**\n**استخدم الامر هكذا « تكرار 1**")
-            chat = f"{bot_username}{chat_id}"
-            check = db.get(chat)
-            file_path = check[0]["file_path"]
-            title = check[0]["title"]
-            duration = check[0]["dur"]
-            user_id = check[0]["user_id"]
-            chat_id = check[0]["chat_id"]
-            vid = check[0]["vid"]
-            link = check[0]["link"]
-            videoid = check[0]["videoid"]
-            for i in range(x):
-                file_path = file_path if file_path else None
-                await add(chat_id, bot_username, file_path, link, title, duration, videoid, vid, user_id)
-            await message.reply_text(f"**تم تفعيل التكرار {xx}**")
+            if len(message.command) < 2:
+               return await message.reply_text("**قم بتحديد مرات التكرار مثل: تكرار 3**")
+            
+            try:
+                text = message.command[1]
+                
+                # تحويل النص لرقم
+                if text == "مره":
+                    count = 1
+                    display = "مره واحده"
+                elif text == "مرتين":
+                    count = 2
+                    display = "مرتين"
+                elif text.isdigit():
+                    count = int(text)
+                    if count < 1 or count > 10:
+                        return await message.reply_text("**استخدم رقم من 1 إلى 10**")
+                    display = f"{count} مره"
+                else:
+                    return await message.reply_text("**خطأ في الاستخدام، مثال: تكرار 3**")
+                
+                # جلب البيانات من قاعدة البيانات
+                chat = f"{bot_username}{chat_id}"
+                check = db.get(chat)
+                if not check:
+                    return await message.reply_text("**لا يوجد شيء في قائمة التشغيل**")
+                
+                file_path = check[0]["file_path"]
+                title = check[0]["title"]
+                duration = check[0]["dur"]
+                user_id = check[0]["user_id"]
+                chat_id = check[0]["chat_id"]
+                vid = check[0]["vid"]
+                link = check[0]["link"]
+                videoid = check[0]["videoid"]
+                
+                # إضافة المقطع للتكرار
+                for _ in range(count):
+                    file_path_add = file_path if file_path else None
+                    await add(chat_id, bot_username, file_path_add, link, title, duration, videoid, vid, user_id)
+                
+                await message.reply_text(f"**تم تفعيل التكرار {display}**")
+                
+            except Exception as e:
+                print(f"Error in loop command: {e}")
+                await message.reply_text("**حدث خطأ أثناء تفعيل التكرار**")
+                
     elif command == "/skip" or command == "تخطي":
        chat = f"{bot_username}{chat_id}"
        check = db.get(chat)
-       popped = check.pop(0)
-       if not check:
-         await call.leave_group_call(chat_id)
+       if not check or len(check) < 2:
+         try:
+           await call.leave_group_call(chat_id)
+         except Exception as e:
+           print(f"Error leaving call: {e}")
          await remove_active(bot_username, chat_id)
          return await message.reply_text("**تم ايقاف التشغيل لأن قائمة التشغيل فارغة .⚡**")
+       
+       popped = check.pop(0)
        file = check[0]["file_path"]
        title = check[0]["title"]
        dur = check[0]["dur"]
@@ -177,12 +199,14 @@ async def admin_risght(client: Client, message):
        else:     
          try:
             file_path = await download(bot_username, link, video)
-         except:
-            return client.send_message(chat_id, "**حدث خطأ اثناء تشغيل التالي .⚡**")
+         except Exception as e:
+            print(f"Error downloading: {e}")
+            return await client.send_message(chat_id, "**حدث خطأ اثناء تشغيل التالي .⚡**")
        stream = (AudioVideoPiped(file_path, audio_parameters=audio_stream_quality, video_parameters=video_stream_quality) if video else AudioPiped(file_path, audio_parameters=audio_stream_quality))
        try:
            await call.change_stream(chat_id, stream)
-       except Exception:
+       except Exception as e:
+            print(f"Error changing stream: {e}")
             return await client.send_message(chat_id, "**حدث خطأ اثناء تشغيل التالي .⚡**")
        userx = await client.get_users(user_id)
        if videoid:
@@ -198,14 +222,14 @@ async def admin_risght(client: Client, message):
        requester = userx.mention       
        gr = await get_group(bot_username)
        ch = await get_channel(bot_username)
-       button = [[InlineKeyboardButton(text="END", callback_data=f"stop"), InlineKeyboardButton(text="RESUME", callback_data=f"resume"), InlineKeyboardButton(text="PAUSE", callback_data=f"pause")], [InlineKeyboardButton(text="{قـناه الســورس}", url=f"{ch}"), InlineKeyboardButton(text="{جــروب الـدعم}", url=f"{gr}")], [InlineKeyboardButton(text=f"{OWNER_NAME}", url="https://t.me/M_9_T")], [InlineKeyboardButton(text="اضف البوت الي مجموعتك او قناتك ⚡", url=f"https://t.me/{bot_username}?startgroup=True")]]
+       button = [[InlineKeyboardButton(text="END", callback_data=f"stop"), InlineKeyboardButton(text="RESUME", callback_data=f"resume"), InlineKeyboardButton(text="PAUSE", callback_data=f"pause")], [InlineKeyboardButton(text="قـناه الســورس", url=f"{ch}"), InlineKeyboardButton(text="جــروب الـدعم", url=f"{gr}")], [InlineKeyboardButton(text=f"{OWNER_NAME}", url="https://t.me/M_9_T")], [InlineKeyboardButton(text="اضف البوت الي مجموعتك او قناتك ⚡", url=f"https://t.me/{bot_username}?startgroup=True")]]
        await message.reply_photo(photo=img, caption=f"**Skipped Streaming **\n\n**Song Name** : {title}\n**Duration Time** {dur}\n**Request By** : {requester}", reply_markup=InlineKeyboardMarkup(button))
        try:
            os.remove(file_path)
            os.remove(img)
-       except:
-           pass
+       except Exception as e:
+           print(f"Error removing files: {e}")
     else:
       await message.reply_text("**خطا في استخدام الأمر**")
-  except:
-    pass
+  except Exception as e:
+    print(f"Error in command handler: {e}")

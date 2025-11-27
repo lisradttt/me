@@ -1,29 +1,11 @@
-from pyrogram import Client, idle
-from config import API_ID, API_HASH, BOT_TOKEN
-from pyromod import listen
+"""Bot instance placeholder - actual bot is in start_all.py
 
-# تعريف البوت
-bot = Client(
-    "JoyBoyIQ",
-    api_id=API_ID,
-    api_hash=API_HASH,
-    bot_token=BOT_TOKEN,
-    plugins=dict(root="Maker")
-)
+Note: This file is kept for backward compatibility.
+The actual bot client is created and managed in start_all.py
+to ensure proper plugin loading and unified startup.
+"""
 
-LOGGER_ID = 8457593460   # ← خليته ثابت فوق ومظبوط رقمياً
+# Import from start_all for reference
+from start_all import bot
 
-async def start_bot():
-    print("[INFO]: STARTING BOT CLIENT")
-
-    await bot.start()
-
-    # ارسال رسالة للوج
-    await bot.send_message(
-        LOGGER_ID,
-        "** تم تشفيل الصانع .**"
-    )
-
-    print("[INFO]: LOG MESSAGE SENT — BOT IS UP ✓")
-
-    await idle()  # ← يخلي البوت شغال
+__all__ = ['bot']

@@ -6,8 +6,9 @@ import aiofiles
 import aiohttp
 import asyncio
 from time import time
-#كوارث 
+# كوارث 
 msg = None
+from KERO.Data import set_video_source  # استدعاء الدالة من data.py
 
 from pyromod import listen
 from pyrogram import Client, filters, idle
@@ -34,18 +35,25 @@ from pyrogram.types import (
     InputMediaAudio
 )
 from pyrogram import enums  
+
+# Exceptions مصححة لتجنب مشاكل Import
 from pyrogram.errors import (
-    UserNotParticipant,
-    ChatAdminRequired,
-    UserAdminInvalid,
-    UserAdminRequired,
-    BotAdminRequired,
-    PeerIdInvalid,
-    FloodWait,
-    MessageNotModified,
-    ChannelPrivate,
-    UsernameNotOccupied
+  UserNotParticipant,
+  ChatAdminRequired,
+  PeerIdInvalid,
+  FloodWait,
+  MessageNotModified,
+  ChannelPrivate,
+  UsernameNotOccupied,
+  RPCError,  # استبدال UserAdminInvalid و UserAdminRequired
 )
+
+# BotAdminRequired existed in older pyrogram versions; provide a
+# fallback alias so code importing it won't crash on newer releases.
+try:
+  from pyrogram.errors import BotAdminRequired
+except Exception:
+  BotAdminRequired = ChatAdminRequired if "ChatAdminRequired" in globals() else Exception
 
 from config import OWNER, OWNER_NAME, VIDEO
 
@@ -75,6 +83,7 @@ from KERO.Data import (
     get_dev_name,
     get_dev_user,
     get_video_source,
+    set_video_source,
     get_groupsr,
     get_channelsr,
     get_userbot,
@@ -85,7 +94,6 @@ from KERO.Data import (
     set_channelsr,
     _mongo_client_,
     MONGO_DB_URL
-    
 )
 
 from PIL import (

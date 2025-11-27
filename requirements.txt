@@ -1,33 +1,50 @@
-wget
-tgcrypto
-ffmpeg-python
+
+# Core Telegram libraries
+pyrogram>=2.0.0,<3.0.0
+# Use the older PyPI package `py-tgcalls` (0.9.7) which matches
+# projects that used the previous pytgcalls/py-tgcalls ecosystem.
+# Newer `pytgcalls` depends on `tgcalls` (not available on PyPI),
+# causing resolution issues on some environments.
 py-tgcalls==0.9.7
-telethon==1.28.2
-pyrogram
-youtube-search
-youtube-search-python
-yt-dlp
-python-dotenv
-dnspython
-gitpython
-asgiref
-asSQL
-numpy
-unidecode
-getids
-aiofiles
-dragonxxdlib
-getids
-SpeechRecognition
-aiohttp
-requests
-pillow==9.5.0
-heroku3
-psutil
-future
-wget
-speedtest-cli
-motor
-pyromod~=1.5
-googletrans
-pytz
+pyromod>=1.3.0
+telethon>=1.28.0
+
+# Database
+motor>=3.1.1
+pymongo>=4.3.0
+
+# Media / downloads
+yt-dlp>=2024.1.0
+youtube-search>=2.1.0
+youtube-search-python>=1.4.9
+ffmpeg-python>=0.2.0
+
+# Utilities
+python-dotenv>=0.21.0
+aiohttp>=3.8.4
+aiofiles>=23.1.0
+requests>=2.31.0
+dnspython>=2.3.0
+gitpython>=3.1.30
+psutil>=5.9.5
+numpy>=1.24.0
+pillow>=9.5.0
+unidecode>=1.3.6
+tgcrypto==1.2.5
+httpx>=0.14.2
+
+# Misc / text/audio
+SpeechRecognition>=3.8.1
+googletrans>=4.0.0
+pytz>=2024.1
+
+# CLI / helpers
+speedtest-cli>=2.1.3
+heroku3>=5.0.0
+
+# NOTE: the following packages were present in the original file but
+# could be custom or unavailable on PyPI. Keep them here if you know
+# they are required; otherwise they may be removed.
+# getids
+# dragonxxdlib
+# asSQL

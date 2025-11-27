@@ -15,6 +15,8 @@ from typing import Union, List, Iterable
 BASE = "https://batbin.me/"
 
 
+import aiohttp
+
 async def post(url: str, *args, **kwargs):
     async with aiohttp.ClientSession() as session:
         async with session.post(url, *args, **kwargs) as resp:
@@ -22,27 +24,32 @@ async def post(url: str, *args, **kwargs):
                 data = await resp.json()
             except Exception:
                 data = await resp.text()
-        return data
-
+            return data
 
 async def base(text):
     resp = await post(f"{BASE}api/v2/paste", data=text)
-    if not resp["success"]:
-        return
-    link = BASE + resp["message"]
+    if not resp.get("success"):
+        return None
+    link = BASE + resp.get("message")
     return link
 
 
+# احصائيات البوت
 
 @Client.on_message(filters.command(["الاحصائيات", "• الاحصائيات •"], ""))
 async def analysis(client: Client, message: Message):
- bot_username = client.me.username
- dev = await get_dev(bot_username)
- if message.chat.id == dev or message.chat.username in OWNER:
-   chats = len(await get_served_chats(client))
-   user = len(await get_served_users(client))
-   return await message.reply_text(f"**✅ احصائيات البوت**\n**⚡ المجموعات {chats} مجموعة  **\n**⚡ المستخدمين {user} مستخدم**")
+    bot_username = client.me.username
+    dev = await get_dev(bot_username)
+    if message.chat.id == dev or (message.chat.username and message.chat.username in OWNER):
+        chats = len(await get_served_chats(client))
+        users = len(await get_served_users(client))
+        await message.reply_text(
+            f"**✅ احصائيات البوت**\n"
+            f"**⚡ المجموعات {chats} مجموعة  **\n"
+            f"**⚡ المستخدمين {users} مستخدم**"
+        )
 
+# عرض المجموعات والمستخدمين
 @Client.on_message(filters.command(["• المجموعات •"], ""))
 async def chats_func(client: Client, message: Message):
  bot_username = client.me.username
@@ -82,81 +89,108 @@ async def chats_func(client: Client, message: Message):
          await message.reply_text(link)
       return await m.delete()
 
-
-
+# عرض المستخدمين
 @Client.on_message(filters.command(["• المستخدمين •"], ""))
 async def users_func(client: Client, message: Message):
- bot_username = client.me.username
- dev = await get_dev(bot_username)
- if message.chat.id == dev or message.chat.username in OWNER:
-    m = await message.reply_text("⚡")
-    served_chats = []
-    text = ""
-    chats = await get_served_users(client)
-    for chat in chats:
-        served_chats.append(int(chat["user_id"]))
-    count = 0
-    co = 0
-    msg = ""
-    for served_chat in served_chats:
-        if f"{served_chat}" in text:
-           await del_served_user(client, served_chat)
+    bot_username = client.me.username
+    dev = await get_dev(bot_username)
+    if message.chat.id == dev or str(message.chat.id) in OWNER:
+        m = await message.reply_text("⚡")
+        served_chats = []
+        text = ""
+        chats = await get_served_users(client)
+
+        # جمع اليوزر آي ديز بشكل صحيح
+        for chat in chats:
+            served_chats.append(int(chat["user_id"]))
+
+        count = 0
+        co = 0
+        msg = ""
+
+        # استخدام قائمة للتحقق من التكرار بدل البحث داخل النص
+        unique_users = set()
+
+        for served_chat in served_chats:
+
+            # التحقق الصحيح من التكرار
+            if served_chat in unique_users:
+                await del_served_user(client, served_chat)
+                continue
+            unique_users.add(served_chat)
+
+            try:
+                chat = await client.get_chat(served_chat)
+                title = chat.first_name if chat.first_name else "User"
+                username = chat.username
+
+                count += 1
+
+                txt = (
+                    f"{count}:- Chat : [{title}](https://t.me/{username}) Id : `{served_chat}`\n"
+                    if username
+                    else f"{count}:- Chat : {title} Id : `{served_chat}`\n"
+                )
+                text += txt
+
+            except Exception:
+                title = "Not Found"
+                count += 1
+                text += f"{count}:- {title} {served_chat}\n"
+
+        if count == 0:
+            return await m.edit("الاحصائيات صفر 🤔")
         else:
-         try:
-            chat = await client.get_chat(served_chat)
-            title = chat.first_name
-            username = chat.username
-            count += 1
-            txt = f"{count}:- Chat : [{title}](https://t.me/{username}) Id : `{served_chat}`\n" if username else f"{count}:- Chat : {title} Id : `{served_chat}`\n"
-            text += txt
-         except Exception:
-            title = "Not Found" 
-            count += 1
-            text += f"{count}:- {title} {served_chat}\n"
-    if count == 0:
-      return await m.edit("الاحصائيات صفر 🤔")
-    else:
-      try:
-        await message.reply_text(text, disable_web_page_preview=True)
-      except: 
-         link = await base(text)
-         await message.reply_text(link)
-      return await m.delete()
+            try:
+                await message.reply_text(text, disable_web_page_preview=True)
+            except:
+                link = await base(text)
+                await message.reply_text(link)
+
+            return await m.delete()
+
+# عرض المكالمات النشطه 
+
 
 @Client.on_message(filters.command("• المكالمات النشطه •", ""))
 async def geetmeactive(client, message):
   bot_username = client.me.username
   dev = await get_dev(bot_username)
-  if message.chat.id == dev or message.chat.username in OWNER:
-   m = await message.reply_text("**جاري جلب المكالمات النشطه ..🚦**")
-   count = 0
-   text = ""
-   for i in activecall[client.me.username]:
-       try:
-          chat = await client.get_chat(i)
-          count += 1
-          text += f"{count}- [{chat.title}](https://t.me/{chat.username}) : {chat.id}" if chat.username else f"{chat.title} : {chat.id}"
-       except Exception:
-            title = "Not Found" 
+  if message.chat.id == dev or str(message.chat.id) in OWNER:
+    m = await message.reply_text("**جاري جلب المكالمات النشطه ..🚦**")
+    count = 0
+    text = ""
+    for i in activecall[client.me.username]:
+        try:
+           chat = await client.get_chat(i)
+           count += 1
+           text += (
+               f"{count}- [{chat.title}](https://t.me/{chat.username}) : {chat.id}\n"
+               if chat.username
+               else f"{count}- {chat.title} : {chat.id}\n"
+           )
+        except Exception:
+            title = "Not Found"
             count += 1
-            text += f"{count}:- {title} {chat.id}\n"
-   if count == 0:
-      return await m.edit(" لا يوجد مكالمات نشطه الان 🤔")
-   else:
-      try:
-        await message.reply_text(text, disable_web_page_preview=True)
-      except: 
-         link = await base(text)
-         await message.reply_text(link)
-      return await m.delete()
+            text += f"{count}- {title} {i}\n"
+    if count == 0:
+        return await m.edit(" لا يوجد مكالمات نشطه الان 🤔")
+    else:
+        try:
+            await message.reply_text(text, disable_web_page_preview=True)
+        except:
+            link = await base(text)
+            await message.reply_text(link)
+        return await m.delete()
 
+# قسم الاذاعه
 
 
 @Client.on_message(filters.command(["• قسم الإذاعة •", "• رجوع •"], ""))
 async def cast(client: Client, message):
    bot_username = client.me.username
    dev = await get_dev(bot_username)
-   if message.chat.id == dev or message.chat.username in OWNER:
+   if message.chat.id == dev or str(message.chat.id) in OWNER:
     kep = ReplyKeyboardMarkup([["• اذاعه عام •"], ["• اذاعه للمجموعات •", "• اذاعه للمستخدمين •"], ["• توجيه عام •"], ["• توجيه للمجموعات •", "• توجيه للمستخدمين •"], ["• رجوع للقائمة الرئيسيه •"]], resize_keyboard=True)
     await message.reply_text("**أهلا بك عزيزي المطور **\n**هنا قسم الاذاعه تحكم بالازار**", reply_markup=kep)
 
@@ -166,7 +200,7 @@ async def cast1(client: Client, message):
    command = message.command[0]
    bot_username = client.me.username
    dev = await get_dev(bot_username)
-   if message.chat.id == dev or message.chat.username in OWNER:
+   if message.chat.id == dev or str(message.chat.id) in OWNER:
     if command == "• اذاعه عام •":
      kep = ReplyKeyboardMarkup([["• اذاعه عام بالبوت •"], ["• اذاعه عام بالمساعد •"], ["• رجوع •"]], resize_keyboard=True)
      await message.reply_text("**أهلا بك عزيزي المطور **\n**هنا قسم الاذاعه تحكم بالازار**", reply_markup=kep)
@@ -185,6 +219,7 @@ async def cast1(client: Client, message):
     else:
      kep = ReplyKeyboardMarkup([["• توجيه للمجموعات بالبوت •"], ["• رجوع •"]], resize_keyboard=True)
      await message.reply_text("**أهلا بك عزيزي المطور **\n**هنا قسم الاذاعه تحكم بالازار**", reply_markup=kep)
+
 
 
 @Client.on_message(filters.command(["• اذاعه عام بالبوت •", "• اذاعه عام بالمساعد •", "• اذاعه للمجموعات بالبوت •", "• اذاعه للمجموعات بالمساعد •", "• اذاعه للمستخدمين بالبوت •", "• اذاعه للمستخدمين بالمساعد •", "• توجيه عام بالبوت •", "• توجيه عام بالمساعد •", "• توجيه للمجموعات بالبوت •", "• توجيه للمجموعات بالمساعد •", "• توجيه للمستخدمين بالبوت •", "• توجيه للمستخدمين بالمساعد •"], ""))
@@ -544,6 +579,7 @@ async def userrrrr(client: Client, message):
             ms, u, g, sg, c, a_chat, b, usere
         )
     )
+# قسم تغير بيانات المساعد
 
 @Client.on_message(filters.command("• تغير الاسم الاول •", ""))
 async def changefisrt(client: Client, message):
@@ -560,6 +596,7 @@ async def changefisrt(client: Client, message):
      await message.reply_text(f" حدث خطأ أثناء تغير الاسم \n {es}")
 
 
+
 @Client.on_message(filters.command("• تغير الاسم التاني •", ""))
 async def changelast(client: Client, message):
   bot_username = client.me.username
@@ -573,6 +610,7 @@ async def changelast(client: Client, message):
     await message.reply_text("**تم تغير اسم الحساب المساعد بنجاح .⚡**")
    except Exception as es:
      await message.reply_text(f" حدث خطأ أثناء تغير الاسم \n {es}")
+
 
 
 @Client.on_message(filters.command("• تغير البايو •", ""))
@@ -592,116 +630,138 @@ async def changebio(client: Client, message):
 
 @Client.on_message(filters.command("• تغير اسم المستخدم •", ""))
 async def changeusername(client: Client, message):
-  bot_username = client.me.username
-  dev = await get_dev(bot_username)
-  if message.chat.id == dev or message.chat.username in OWNER:
-   try:
-    name = await client.ask(message.chat.id, "• ارسل الان اسم المستخدم الجديد •")
-    name = name.text
-    client = await get_userbot(bot_username)
-    await client.set_username(name)
-    await message.reply_text("**تم تغير اسم المستخدم بنجاح .⚡**")
-   except Exception as es:
-     await message.reply_text(f" حدث خطأ أثناء تغير اسم المستخدم \n {es}")
+    bot_username = client.me.username
+    dev = await get_dev(bot_username)
+    if message.chat.id == dev or message.chat.username in OWNER:
+        try:
+            name_msg = await client.ask(message.chat.id, "• ارسل الان اسم المستخدم الجديد •")
+            name = name_msg.text
+            userbot = await get_userbot(bot_username)  # استعمل اسم مختلف
+            await userbot.set_username(name)
+            await message.reply_text("**تم تغير اسم المستخدم بنجاح .⚡**")
+        except Exception as es:
+            await message.reply_text(f" حدث خطأ أثناء تغير اسم المستخدم \n {es}")
 
+# قسم تغير صوره المساعد
 
 @Client.on_message(filters.command(["• اضافه صوره •"], ""))
 async def changephoto(client: Client, message):
-  bot_username = client.me.username
-  dev = await get_dev(bot_username)
-  if message.chat.id == dev or message.chat.username in OWNER:
-   try:
-    m = await client.ask(message.chat.id, "قم بإرسال الصوره الجديده الان")
-    photo = await m.download()
-    client = await get_userbot(bot_username)
-    await client.set_profile_photo(photo=photo)
-    await message.reply_text("**تم تغير صوره الحساب المساعد بنجاح .⚡**") 
-   except Exception as es:
-     await message.reply_text(f" حدث خطأ أثناء تغير الصوره \n {es}")
+    bot_username = client.me.username
+    dev = await get_dev(bot_username)
+    if message.chat.id == dev or message.chat.username in OWNER:
+        try:
+            m = await client.ask(message.chat.id, "قم بإرسال الصوره الجديده الان")
+            photo = await m.download()
+            userbot = await get_userbot(bot_username)  # استخدام اسم مختلف
+            await userbot.set_profile_photo(photo=photo)
+            await message.reply_text("**تم تغير صوره الحساب المساعد بنجاح .⚡**") 
+        except Exception as es:
+            await message.reply_text(f" حدث خطأ أثناء تغير الصوره \n {es}")
+# قسم ازاله صوره المساعد
 
 @Client.on_message(filters.command(["• ازاله صوره •"], ""))
 async def changephotos(client: Client, message):
-  bot_username = client.me.username
-  dev = await get_dev(bot_username)
-  if message.chat.id == dev or message.chat.username in OWNER:
-       try:
-        client = await get_userbot(bot_username)
-        photos = await client.get_profile_photos("me")
-        await client.delete_profile_photos([p.file_id for p in photos[1:]])
-        await message.reply_text("**تم ازاله صوره بنجاح .⚡**")
-       except Exception as es:
-         await message.reply_text(f" حدث خطأ أثناء ازاله الصوره \n {es}")
+    bot_username = client.me.username
+    dev = await get_dev(bot_username)
+    if message.chat.id == dev or message.chat.username in OWNER:
+        try:
+            userbot = await get_userbot(bot_username)  # استخدام اسم مختلف
+            photos = await userbot.get_profile_photos("me")
+            if photos:
+                await userbot.delete_profile_photos([p.file_id for p in photos])
+                await message.reply_text("**تم ازاله صوره بنجاح .⚡**")
+            else:
+                await message.reply_text("**لا يوجد صور لحذفها ⚠️**")
+        except Exception as es:
+            await message.reply_text(f" حدث خطأ أثناء ازاله الصوره \n {es}")
 
+# قسم دعوه المساعد للانضمام
 
 @Client.on_message(filters.command("• دعوه المساعد الي الانضمام •", ""))
 async def joined(client: Client, message):
-  bot_username = client.me.username
-  dev = await get_dev(bot_username)
-  if message.chat.id == dev or message.chat.username in OWNER:
-   try:
-    name = await client.ask(message.chat.id, "• ارسل الان الرابط •")
-    name = name.text
-    if "https" in name:
-     if not "+" in name: 
-       name = name.replace("https://t.me/", "")
-    client = await get_userbot(bot_username)
-    await client.join_chat(name)
-    await message.reply_text("**تم انضمام الحساب المساعد بنجاح .⚡**")
-   except Exception as es:
-     await message.reply_text(f" حدث خطأ أثناء الانضمام \n {es}")
+    bot_username = client.me.username
+    dev = await get_dev(bot_username)
+    if message.chat.id == dev or message.chat.username in OWNER:
+        try:
+            m = await client.ask(message.chat.id, "• ارسل الان الرابط •")
+            name = m.text
+            if "https" in name and "+" not in name:
+                name = name.replace("https://t.me/", "")
+            userbot = await get_userbot(bot_username)  # استخدام اسم مختلف
+            await userbot.join_chat(name)
+            await message.reply_text("**تم انضمام الحساب المساعد بنجاح .⚡**")
+        except Exception as es:
+            await message.reply_text(f" حدث خطأ أثناء الانضمام \n {es}")
+
 
 
 
 @Client.on_message(filters.command(["• تغير مكان سجل التشغيل •", "• تفعيل سجل التشغيل •", "• تعطيل سجل التشغيل •"], ""))
 async def set_history(client: Client, message):
- bot_username = client.me.username
- dev = await get_dev(bot_username)
- if message.chat.id == dev or message.chat.username in OWNER:
-  if message.command[0] == "• تغير مكان سجل التشغيل •":
-   ask = await client.ask(message.chat.id, "** قم بارسال يوزرنيم أو ايدي الذي تريد تعيينه **", timeout=30)
-   logger = ask.text
-   if "@" in logger:
-     logger = logger.replace("@", "")
-  Botts = Bots.find({})
-  for i in Botts:
-      bot = client.me
-      if i["bot_username"] == bot.username:
-        dev = i["dev"]
-        token = i["token"]
-        session = i["session"]
-        bot_username = i["bot_username"]
-        loogger = i["logger"]
-        logger_mode = i["logger_mode"]
+    bot_username = client.me.username
+    dev = await get_dev(bot_username)
+    if message.chat.id == dev or message.chat.username in OWNER:
         if message.command[0] == "• تغير مكان سجل التشغيل •":
-         if i["logger"] == logger:
-           return await ask.reply_text("**هذا هو مكان السجل بالفعل .⚡**")
-         else:
-          try:
-           user = await get_userbot(bot_username)
-           await client.send_message(logger, "**جاري الفحص ...**")
-           await user.send_message(logger, "**جاري تغير مكان السجل ..**")
-           d = {"bot_username": bot_username}
-           Bots.delete_one(d)
-           asyncio.sleep(2)
-           aha = {"bot_username": bot_username, "token": token, "session": session, "dev": dev, "logger": logger, "logger_mode": logger_mode}
-           Bots.insert_one(aha)
-           log[bot_username] = logger
-           await ask.reply_text("**تم تغير سجل التشغيل بنجاح ✅**")
-          except Exception:
-            await ask.reply_text("**تاكد من اضافه البوت والمساعد وترقيتهم مشرف**")
-        else:
-         mode = "ON" if message.command[0] == "• تفعيل سجل التشغيل •" else "OFF"
-         if i["logger_mode"] == mode:
-           m = "مفعل" if message.command[0] == "• تفعيل سجل التشغيل •" else "معطل"
-           return await message.reply_text(f"**سجل التشغيل {m} من قبل .⚡**")
-         else:
-          try:
-           hh = {"bot_username": bot_username}
-           Bots.delete_one(hh)
-           h = {"bot_username": bot_username, "token": token, "session": session, "dev": dev, "logger": loogger, "logger_mode": mode}
-           Bots.insert_one(h)
-           logm[bot_username] = mode
-           m = "تفعيل" if message.command == "• تفعيل سجل التشغيل •" else "تعطيل"
-           await message.reply_text(f"**تم {m} سجل التشغيل بنجاح ✅**")
-          except Exception as es:
-            await message.reply_text("**حدث خطأ راسل المطور ..**")
+            ask = await client.ask(message.chat.id, "** قم بارسال يوزرنيم أو ايدي الذي تريد تعيينه **", timeout=30)
+            logger = ask.text
+            if "@" in logger:
+                logger = logger.replace("@", "")
+
+        Botts = Bots.find({})
+        for i in Botts:
+            bot = client.me
+            if i.get("bot_username") == bot.username:
+                dev = i.get("dev")
+                token = i.get("token")
+                session = i.get("session")
+                bot_username = i.get("bot_username")
+                loogger = i.get("logger")
+                logger_mode = i.get("logger_mode")
+
+                if message.command[0] == "• تغير مكان سجل التشغيل •":
+                    if i.get("logger") == logger:
+                        return await ask.reply_text("**هذا هو مكان السجل بالفعل .⚡**")
+                    else:
+                        try:
+                            userbot = await get_userbot(bot_username)
+                            await client.send_message(logger, "**جاري الفحص ...**")
+                            await userbot.send_message(logger, "**جاري تغير مكان السجل ..**")
+                            d = {"bot_username": bot_username}
+                            Bots.delete_one(d)
+                            await asyncio.sleep(2)
+                            aha = {
+                                "bot_username": bot_username,
+                                "token": token,
+                                "session": session,
+                                "dev": dev,
+                                "logger": logger,
+                                "logger_mode": logger_mode
+                            }
+                            Bots.insert_one(aha)
+                            log[bot_username] = logger
+                            await ask.reply_text("**تم تغير سجل التشغيل بنجاح ✅**")
+                        except Exception:
+                            await ask.reply_text("**تاكد من اضافه البوت والمساعد وترقيتهم مشرف**")
+                else:
+                    mode = "ON" if message.command[0] == "• تفعيل سجل التشغيل •" else "OFF"
+                    if i.get("logger_mode") == mode:
+                        m = "مفعل" if message.command[0] == "• تفعيل سجل التشغيل •" else "معطل"
+                        return await message.reply_text(f"**سجل التشغيل {m} من قبل .⚡**")
+                    else:
+                        try:
+                            hh = {"bot_username": bot_username}
+                            Bots.delete_one(hh)
+                            h = {
+                                "bot_username": bot_username,
+                                "token": token,
+                                "session": session,
+                                "dev": dev,
+                                "logger": loogger,
+                                "logger_mode": mode
+                            }
+                            Bots.insert_one(h)
+                            logm[bot_username] = mode
+                            m = "تفعيل" if message.command[0] == "• تفعيل سجل التشغيل •" else "تعطيل"
+                            await message.reply_text(f"**تم {m} سجل التشغيل بنجاح ✅**")
+                        except Exception as es:
+                            await message.reply_text("**حدث خطأ راسل المطور ..**")
